@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Infographic Maker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Caveat:wght@400;700&family=DM+Sans:ital,wght@0,400;0,700;1,400;1,700&family=Lora:ital,wght@0,400;0,700;1,400;1,700&family=Montserrat:ital,wght@0,400;0,700;1,400;1,700&family=Oswald:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap">
+<style>
+  :root {
+    --bg: #f3f4f7;
+    --panel: #ffffff;
+    --fg: #1c2230;
+    --muted: #667085;
+    --line: #dde1ea;
+    --accent: #0a66c2;
+    --accent-fg: #ffffff;
+    --field: #f7f8fb;
+    --ui: "DM Sans", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151c; --panel: #1b202b; --fg: #e8ebf2; --muted: #98a2b3;
+      --line: #2e3544; --accent: #57a4f0; --accent-fg: #0b1220; --field: #232a38;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.4 var(--ui); }
+  .app {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px;
+    max-width: 1280px; margin: 0 auto; padding: 24px max(16px, env(safe-area-inset-left)) 48px;
+  }
+  @media (max-width: 860px) { .app { grid-template-columns: minmax(0, 1fr); } }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 16px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  .settings { display: flex; flex-wrap: wrap; gap: 14px 18px; align-items: end; margin-bottom: 14px; }
+  label.f { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+  input, select, button, textarea { font: inherit; color: var(--fg); }
+  input[type=text], input[type=number], select, textarea {
+    background: var(--field); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; min-width: 0;
+  }
+  input:focus-visible, select:focus-visible, button:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 1px;
+  }
+  input[type=color] { width: 36px; height: 30px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: none; cursor: pointer; }
+  .swatches { display: flex; gap: 6px; align-items: center; }
+  .ctl .sw { width: 16px; height: 16px; }
+  .sw { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--line); cursor: pointer; padding: 0; }
+  .check { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--fg); }
+  .gfx { display: grid; gap: 10px; margin-top: 4px; }
+  .pic { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: 8px; background: var(--field); }
+  .pic strong { min-width: 70px; }
+  .pic .fade { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 12px; }
+  .pic .thumb { width: 36px; height: 36px; object-fit: cover; border-radius: 4px; border: 1px solid var(--line); }
+  .lines { display: grid; gap: 10px; margin-top: 14px; }
+  .line { border: 1px solid var(--line); border-radius: 8px; padding: 8px; display: grid; gap: 8px; background: var(--field); }
+  .line.active { border-color: var(--accent); }
+  .line .top { display: flex; gap: 6px; align-items: center; }
+  .line .top input[type=text] { flex: 1; font-size: 15px; background: var(--panel); }
+  .ctl { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .ctl select { max-width: 140px; }
+  .ctl input[type=number] { width: 62px; }
+  button.ib {
+    min-width: 30px; height: 30px; border: 1px solid var(--line); background: var(--panel);
+    border-radius: 6px; cursor: pointer; padding: 0 6px;
+  }
+  button.ib:hover { border-color: var(--accent); }
+  button.ib[aria-pressed=true] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+  button.ib:disabled { opacity: .35; cursor: default; }
+  .primary { background: var(--accent); color: var(--accent-fg); border: 0; border-radius: 8px; padding: 10px 16px; font-weight: 700; cursor: pointer; }
+  .secondary { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 9px 14px; cursor: pointer; }
+  .add { margin-top: 10px; }
+  .preview { position: sticky; top: 16px; align-self: start; display: grid; gap: 12px; }
+  .stage { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: grid; place-items: center; }
+  canvas { width: 100%; max-width: 100%; max-height: 78vh; object-fit: contain; box-shadow: 0 2px 14px rgba(0,0,0,.18); }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .note { color: var(--muted); font-size: 12px; }
+  @media (max-width: 860px) { .preview { position: static; order: -1; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <section>
+    <h1>Infographic Maker</h1>
+    <p class="sub">Type your text. Press Enter for a new line. Style each line on its own.</p>
+
+    <div class="panel">
+      <div class="settings">
+        <label class="f">Size
+          <select id="size">
+            <option value="1080x1350">Portrait 1080 × 1350</option>
+            <option value="1080x1080">Square 1080 × 1080</option>
+            <option value="1200x627">Landscape 1200 × 627</option>
+          </select>
+        </label>
+        <label class="f">Background
+          <span class="swatches">
+            <input type="color" id="bg" value="#0f2b46" aria-label="Background color">
+            <span id="bgSw" class="swatches" style="flex-wrap:wrap;max-width:300px"></span>
+</span>
+        </label>
+        <label class="f">Line spacing
+          <input type="range" id="spacing" min="0.9" max="1.8" step="0.05" value="1.25">
+        </label>
+      </div>
+
+      <div class="gfx" id="gfx"></div>
+      <button class="secondary add" id="addPic" type="button">+ Add another picture</button>
+    </div>
+
+    <div class="lines" id="lines"></div>
+    <button class="secondary add" id="addLine" type="button">+ Add line</button>
+  </section>
+
+  <section class="preview">
+    <div class="stage"><canvas id="cv" width="1080" height="1350"></canvas></div>
+    <div class="actions">
+      <button class="primary" id="download" type="button">Download PNG</button>
+      <span class="note" id="dlNote">Exports at full size, ready to upload to LinkedIn.</span>
+    </div>
+  </section>
+</div>
+
+<script>
+const FONTS = ["DM Sans","Montserrat","Playfair Display","Lora","Bebas Neue","Oswald","Caveat","Roboto Mono","Georgia","Arial"];
+const PALETTE = ["#ffffff","#f5f1e8","#e8f1e4","#dbeafe","#fde2e4","#f4c430","#ff8a3d","#e5484d","#d6409f","#7c3aed","#0a66c2","#0f2b46","#0b7a75","#2e7d32","#6b7280","#111111"];
+const SWATCH_TEXT = "#ffffff";
+let uid = 1;
+const mk = (o = {}) => Object.assign({
+  id: uid++, text: "", font: "DM Sans", size: 56, bold: false, italic: false,
+  underline: false, color: SWATCH_TEXT, align: "left"
+}, o);
+
+const state = {
+  lines: [
+    mk({ text: "3 lessons from my first year as a manager", font: "Playfair Display", size: 84, bold: true }),
+    mk({ text: "" , size: 30}),
+    mk({ text: "1. Listen before you decide", size: 52, color: "#f4c430", bold: true }),
+    mk({ text: "2. Praise in public, coach in private", size: 52, color: "#f4c430", bold: true }),
+    mk({ text: "3. Protect your team's focus", size: 52, color: "#f4c430", bold: true }),
+    mk({ text: "" , size: 30}),
+    mk({ text: "Which one would you add?", font: "Caveat", size: 64, italic: true }),
+  ],
+  pics: [{ im: null, loc: "top", dim: 40, size: 80 }], bg: "#0f2b46", w: 1080, h: 1350, spacing: 1.25, active: null
+};
+
+const cv = document.getElementById("cv");
+const ctx = cv.getContext("2d");
+const $ = id => document.getElementById(id);
+const requested = new Set();
+
+const fontStr = l =>
+  `${l.italic ? "italic " : ""}${l.bold ? "700 " : "400 "}${l.size}px "${l.font}", sans-serif`;
+
+function lum(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const [r, g, b] = [n >> 16 & 255, n >> 8 & 255, n & 255];
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+}
+
+function wrap(text, maxW) {
+  if (!text) return [""];
+  const out = []; let cur = "";
+  for (const word of text.split(/(\s+)/)) {
+    const t = cur + word;
+    if (cur && ctx.measureText(t).width > maxW && word.trim()) { out.push(cur.trimEnd()); cur = word.trimStart(); }
+    else cur = t;
+  }
+  out.push(cur.trimEnd());
+  return out;
+}
+
+function drawCover(im, x, y, w, h, r) {
+  const sc = Math.max(w / im.width, h / im.height);
+  ctx.save(); ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.clip();
+  ctx.drawImage(im, x + (w - im.width * sc) / 2, y + (h - im.height * sc) / 2, im.width * sc, im.height * sc);
+  ctx.restore();
+}
+
+function drawFit(im, x, y, w, h) {
+  ctx.save(); ctx.beginPath(); ctx.roundRect(x, y, w, h, 14); ctx.clip();
+  ctx.drawImage(im, x, y, w, h); ctx.restore();
+}
+
+function draw() {
+  const { w, h } = state;
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  ctx.fillStyle = state.bg; ctx.fillRect(0, 0, w, h);
+
+  const pad = Math.round(w * 0.085), gap = 36, sp = 20;
+  let L = pad, T = pad, R = w - pad, B = h - pad;
+  const placed = state.pics.filter(p => p.im);
+
+  placed.filter(p => p.loc === "background").forEach(p => {
+    drawCover(p.im, 0, 0, w, h, 0);
+    ctx.globalAlpha = p.dim / 100; ctx.fillStyle = state.bg; ctx.fillRect(0, 0, w, h); ctx.globalAlpha = 1;
+  });
+  for (const loc of ["top", "bottom", "left", "right"]) {
+    const g = placed.filter(p => p.loc === loc);
+    if (!g.length) continue;
+    const horiz = loc === "top" || loc === "bottom";
+    const asp = p => p.im.height / p.im.width;
+    const items = g.map(p => {
+      let iw = (p.size / 100) * (horiz ? R - L : (R - L) * 0.5), ih = iw * asp(p);
+      const cap = horiz ? h * 0.5 : B - T;
+      if (ih > cap) { iw *= cap / ih; ih = cap; }
+      return { p, iw, ih };
+    });
+    if (horiz) {
+      const sum = items.reduce((a, o) => a + o.iw, 0) + sp * (items.length - 1);
+      const f = Math.min(1, (R - L) / sum);
+      items.forEach(o => { o.iw *= f; o.ih *= f; });
+      const rowH = Math.max(...items.map(o => o.ih));
+      let x = L + ((R - L) - (sum * f)) / 2;
+      const y0 = loc === "top" ? T : B - rowH;
+      items.forEach(o => { drawFit(o.p.im, x, y0 + (rowH - o.ih) / 2, o.iw, o.ih); x += o.iw + sp; });
+      if (loc === "top") T += rowH + gap; else B -= rowH + gap;
+    } else {
+      const sum = items.reduce((a, o) => a + o.ih, 0) + sp * (items.length - 1);
+      const f = Math.min(1, (B - T) / sum);
+      items.forEach(o => { o.iw *= f; o.ih *= f; });
+      const colW = Math.max(...items.map(o => o.iw));
+      const x0 = loc === "left" ? L : R - colW;
+      let y = T + ((B - T) - sum * f) / 2;
+      items.forEach(o => { drawFit(o.p.im, x0 + (colW - o.iw) / 2, y, o.iw, o.ih); y += o.ih + sp; });
+      if (loc === "left") L += colW + gap; else R -= colW + gap;
+    }
+  }
+
+  const maxW = R - L, areaH = B - T;
+  const blocks = state.lines.map(l => {
+    const f = fontStr(l);
+    if (!requested.has(f)) { requested.add(f); document.fonts.load(f).then(draw).catch(() => {}); }
+    ctx.font = f;
+    const subs = wrap(l.text, maxW).map(t => ({ t, w: ctx.measureText(t).width }));
+    return { l, f, subs, lh: l.size * state.spacing };
+  });
+  const total = blocks.reduce((s, b) => s + b.subs.length * b.lh, 0);
+  let y = T + Math.max(0, (areaH - total) / 2);
+
+  ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  for (const b of blocks) {
+    ctx.font = b.f; ctx.fillStyle = b.l.color;
+    for (const s of b.subs) {
+      const x = b.l.align === "center" ? L + (maxW - s.w) / 2 : b.l.align === "right" ? R - s.w : L;
+      const my = y + b.lh / 2;
+      ctx.fillText(s.t, x, my);
+      if (b.l.underline && s.t) ctx.fillRect(x, my + b.l.size * 0.42, s.w, Math.max(2, b.l.size / 18));
+      y += b.lh;
+    }
+  }
+}
+
+/* ---------- line editor ---------- */
+const linesEl = $("lines");
+
+function setActive(id) {
+  state.active = id;
+  linesEl.querySelectorAll(".line").forEach(el => el.classList.toggle("active", +el.dataset.id === id));
+}
+
+function toggleBtn(label, title, on, handler, style) {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "ib"; b.title = title; b.setAttribute("aria-label", title);
+  b.setAttribute("aria-pressed", on); b.innerHTML = label; if (style) b.style.cssText = style;
+  b.onclick = () => { const v = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", v); handler(v); draw(); };
+  return b;
+}
+function iconBtn(label, title, handler, disabled) {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "ib"; b.title = title; b.setAttribute("aria-label", title);
+  b.textContent = label; b.disabled = !!disabled; b.onclick = handler;
+  return b;
+}
+
+function focusLine(id) {
+  const el = linesEl.querySelector(`.line[data-id="${id}"] input[type=text]`);
+  if (el) el.focus();
+}
+
+function insertAfter(idx, base, text = "") {
+  const nl = mk({ ...base, id: uid++, text });
+  state.lines.splice(idx + 1, 0, nl);
+  return nl;
+}
+
+function renderLines() {
+  linesEl.innerHTML = "";
+  state.lines.forEach((l, i) => {
+    const row = document.createElement("div");
+    row.className = "line"; row.dataset.id = l.id;
+
+    const top = document.createElement("div"); top.className = "top";
+    const up = iconBtn("↑", "Move line up", () => { swap(i, i - 1); }, i === 0);
+    const dn = iconBtn("↓", "Move line down", () => { swap(i, i + 1); }, i === state.lines.length - 1);
+    const inp = document.createElement("input");
+    inp.type = "text"; inp.value = l.text; inp.placeholder = "Type a line (Enter adds another)";
+    inp.setAttribute("aria-label", "Line " + (i + 1) + " text");
+    inp.onfocus = () => setActive(l.id);
+    inp.oninput = () => { l.text = inp.value; draw(); };
+    inp.onpaste = e => {
+      const t = (e.clipboardData || window.clipboardData).getData("text");
+      if (!/\r?\n/.test(t)) return;
+      e.preventDefault();
+      const parts = t.split(/\r?\n/);
+      const s = inp.selectionStart, en = inp.selectionEnd;
+      const before = inp.value.slice(0, s) + parts[0];
+      const after = inp.value.slice(en);
+      l.text = before;
+      let at = i, last = l;
+      parts.slice(1).forEach((p, k, arr) => { last = insertAfter(at, l, p + (k === arr.length - 1 ? after : "")); at++; });
+      renderLines(); draw(); focusLine(last.id);
+    };
+    inp.onkeydown = e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const s = inp.selectionStart;
+        const rest = inp.value.slice(s);
+        l.text = inp.value.slice(0, s);
+        const nl = insertAfter(i, l, rest);
+        renderLines(); draw(); focusLine(nl.id);
+        const n = linesEl.querySelector(`.line[data-id="${nl.id}"] input[type=text]`); n.setSelectionRange(0, 0);
+      } else if (e.key === "Backspace" && inp.selectionStart === 0 && inp.selectionEnd === 0 && i > 0) {
+        e.preventDefault();
+        const prev = state.lines[i - 1], join = prev.text.length;
+        prev.text += l.text;
+        state.lines.splice(i, 1);
+        renderLines(); draw(); focusLine(prev.id);
+        const p = linesEl.querySelector(`.line[data-id="${prev.id}"] input[type=text]`); p.setSelectionRange(join, join);
+      }
+    };
+    const del = iconBtn("✕", "Delete line", () => {
+      if (state.lines.length === 1) { l.text = ""; } else state.lines.splice(i, 1);
+      renderLines(); draw();
+    });
+    top.append(up, dn, inp, del);
+
+    const ctl = document.createElement("div"); ctl.className = "ctl";
+    const font = document.createElement("select");
+    font.setAttribute("aria-label", "Font");
+    FONTS.forEach(f => { const o = new Option(f, f); o.style.fontFamily = `"${f}"`; font.add(o); });
+    font.value = l.font; font.onchange = () => { l.font = font.value; draw(); };
+    const size = document.createElement("input");
+    size.type = "number"; size.min = 12; size.max = 220; size.value = l.size; size.setAttribute("aria-label", "Font size");
+    size.oninput = () => { const v = +size.value; if (v >= 8) { l.size = Math.min(v, 400); draw(); } };
+    const color = document.createElement("input");
+    color.type = "color"; color.value = l.color; color.setAttribute("aria-label", "Text color");
+    color.oninput = () => { l.color = color.value; draw(); };
+    const al = document.createElement("select");
+    al.setAttribute("aria-label", "Alignment");
+    [["left", "Left"], ["center", "Center"], ["right", "Right"]].forEach(([v, t]) => al.add(new Option(t, v)));
+    al.value = l.align; al.onchange = () => { l.align = al.value; draw(); };
+
+    ctl.append(
+      font, size,
+      toggleBtn("<b>B</b>", "Bold", l.bold, v => l.bold = v),
+      toggleBtn("<i>I</i>", "Italic", l.italic, v => l.italic = v),
+      toggleBtn("<u>U</u>", "Underline", l.underline, v => l.underline = v),
+      color, al
+    );
+    const sws = document.createElement("div"); sws.className = "swatches"; sws.style.flexWrap = "wrap";
+    PALETTE.forEach(c => {
+      const b = document.createElement("button"); b.type = "button"; b.className = "sw";
+      b.style.background = c; b.setAttribute("aria-label", "Text color " + c);
+      b.onclick = () => { l.color = c; color.value = c; draw(); };
+      sws.append(b);
+    });
+    ctl.append(sws);
+    row.append(top, ctl);
+    linesEl.append(row);
+  });
+  if (state.active != null) setActive(state.active);
+}
+
+function swap(a, b) {
+  if (b < 0 || b >= state.lines.length) return;
+  [state.lines[a], state.lines[b]] = [state.lines[b], state.lines[a]];
+  renderLines(); draw();
+}
+
+/* ---------- controls ---------- */
+$("addLine").onclick = () => {
+  const base = state.lines[state.lines.length - 1] || mk();
+  const nl = insertAfter(state.lines.length - 1, base, "");
+  renderLines(); draw(); focusLine(nl.id);
+};
+$("size").onchange = e => { const [w, h] = e.target.value.split("x").map(Number); state.w = w; state.h = h; draw(); };
+PALETTE.forEach(c => {
+  const b = document.createElement("button"); b.type = "button"; b.className = "sw";
+  b.style.background = c; b.setAttribute("aria-label", "Background " + c);
+  b.onclick = () => { state.bg = c; $("bg").value = c; draw(); };
+  $("bgSw").append(b);
+});
+const LOCS = [["top", "Top"], ["bottom", "Bottom"], ["left", "Left"], ["right", "Right"], ["background", "Background"]];
+function renderGfx() {
+  const box = $("gfx"); box.innerHTML = "";
+  state.pics.forEach((p, i) => {
+    const row = document.createElement("div"); row.className = "pic";
+    const name = document.createElement("strong"); name.textContent = "Picture " + (i + 1);
+    const up = document.createElement("label"); up.className = "secondary"; up.style.cursor = "pointer";
+    up.textContent = p.im ? "Replace image" : "Upload image";
+    const file = document.createElement("input"); file.type = "file"; file.accept = "image/*"; file.hidden = true;
+    file.onchange = () => {
+      const f = file.files[0]; if (!f) return;
+      const im = new Image();
+      im.onload = () => { p.im = im; renderGfx(); draw(); };
+      im.src = URL.createObjectURL(f);
+    };
+    up.append(file);
+    const rm = document.createElement("button"); rm.type = "button"; rm.className = "secondary"; rm.textContent = "Remove image";
+    rm.hidden = !p.im && i === 0;
+    rm.onclick = () => { if (i === 0) p.im = null; else state.pics.splice(i, 1); renderGfx(); draw(); };
+    const loc = document.createElement("select"); loc.setAttribute("aria-label", "Picture location");
+    LOCS.forEach(([v, t]) => loc.add(new Option(t, v))); loc.value = p.loc;
+    loc.onchange = () => { p.loc = loc.value; renderGfx(); draw(); };
+    row.append(name);
+    if (p.im) { const th = document.createElement("img"); th.className = "thumb"; th.src = p.im.src; th.alt = ""; row.append(th); }
+    row.append(up, rm, loc);
+    if (p.loc !== "background") {
+      const sz = document.createElement("label"); sz.className = "fade"; sz.textContent = "Size ";
+      const r = document.createElement("input"); r.type = "range"; r.min = 15; r.max = 100; r.value = p.size;
+      r.setAttribute("aria-label", "Picture size");
+      r.oninput = () => { p.size = +r.value; draw(); };
+      sz.append(r); row.append(sz);
+    } else {
+      const fd = document.createElement("label"); fd.className = "fade"; fd.textContent = "Dim ";
+      const r = document.createElement("input"); r.type = "range"; r.min = 0; r.max = 90; r.value = p.dim;
+      r.oninput = () => { p.dim = +r.value; draw(); };
+      fd.append(r); row.append(fd);
+    }
+    box.append(row);
+  });
+  $("addPic").hidden = state.pics.length >= 2;
+}
+$("addPic").onclick = () => {
+  const used = state.pics.map(p => p.loc);
+  const loc = LOCS.map(l => l[0]).find(v => !used.includes(v)) || "bottom";
+  state.pics.push({ im: null, loc, dim: 40, size: 80 }); renderGfx();
+};
+$("bg").oninput = e => { state.bg = e.target.value; draw(); };
+$("spacing").oninput = e => { state.spacing = +e.target.value; draw(); };
+
+$("download").onclick = async () => {
+  await Promise.all([...requested].map(f => document.fonts.load(f).catch(() => {})));
+  draw();
+  cv.toBlob(blob => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "linkedin-post-" + state.w + "x" + state.h + ".png";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }, "image/png");
+};
+
+renderLines();
+renderGfx();
+draw();
+document.fonts.ready.then(draw);
+</script>
+</body>
+</html>
